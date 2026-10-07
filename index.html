@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f6f8fc"><meta name="description" content="每天的任务与随记，只保存在你的设备。">
+  <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png"><link rel="stylesheet" href="./style.css">
+  <title>日常 · 每日记录</title>
+</head>
+<body>
+<div class="app">
+  <header class="top"><a class="brand" href="./"><span class="brand-mark">日</span><span>日常<small>留一点时间给自己</small></span></a><button id="settings-open" class="icon-button" aria-label="数据与设置">⋯</button></header>
+  <div id="update-banner" class="notice" hidden><span>有新版本，保存后即可更新。</span><button id="update-button">保存并更新</button></div>
+  <div id="backup-banner" class="notice" hidden><span>给最近的日子留一份备份。</span><button id="backup-reminder-button">导出备份</button></div>
+  <main>
+    <section class="day-heading"><div><p class="eyebrow" id="day-label">TODAY / 今天</p><h1 id="date-title"></h1><p id="weekday"></p></div><div class="day-badge" id="day-badge"></div></section>
+    <div class="date-bar"><button id="previous-day" class="icon-button" aria-label="前一天">‹</button><label class="date-control"><span>查看日期</span><input type="date" id="date-picker" aria-label="记录日期"></label><button id="next-day" class="icon-button" aria-label="后一天">›</button><button id="today-button" class="text-button">今天</button></div>
+    <nav class="tabs" aria-label="记录类型"><button id="tasks-tab" class="active" aria-selected="true" role="tab" aria-controls="tasks-panel">每日任务 <span id="task-count">0</span></button><button id="notes-tab" aria-selected="false" role="tab" aria-controls="notes-panel">每日随记</button></nav>
+    <section id="tasks-panel" role="tabpanel" aria-labelledby="tasks-tab">
+      <div class="section-heading"><div><h2>把今天，一件件做好。</h2><p id="progress-label">不必排满，从一件小事开始。</p></div><span class="small-label">TO DO</span></div>
+      <div class="progress-track"><div id="progress-fill"></div></div>
+      <form id="task-form" class="task-composer"><span class="composer-plus">＋</span><input id="task-input" placeholder="今天想做些什么？" maxlength="500" autocomplete="off" aria-label="新任务"><button type="submit" id="add-task">添加</button></form>
+      <ul id="task-list"></ul><div id="task-empty" class="empty"><span class="empty-symbol">✓</span><h3>今天还有很多可能</h3><p>写下一件小事，然后慢慢完成。</p></div>
+    </section>
+    <section id="notes-panel" role="tabpanel" aria-labelledby="notes-tab" hidden>
+      <div class="section-heading"><div><h2>随便写点什么。</h2><p>一个念头、一件小事，或者今天的心情。</p></div><span class="small-label">JOURNAL</span></div>
+      <div class="paper"><textarea id="note-input" placeholder="从这里开始，写下今天……" aria-label="每日随记" maxlength="200000"></textarea><div class="paper-footer"><span id="word-count">0 字</span><button id="save-note" class="text-button">立即保存</button></div></div>
+      <p class="note-hint">停笔约 1 秒后自动保存，每天一篇。</p>
+    </section>
+  </main>
+  <footer><span id="save-status" role="status" aria-live="polite">正在打开本地数据库…</span><span id="network-status">仅存此设备</span></footer>
+</div>
+<dialog id="settings-dialog"><div class="dialog-heading"><h2>数据与设置</h2><button class="icon-button" id="settings-close" aria-label="关闭">×</button></div><p class="muted">你的任务和随记只保存在当前浏览器，不会上传 GitHub。请固定使用同一入口。</p><div class="settings-group"><h3>备份你的日常</h3><button id="export-json" class="setting-action">导出完整备份 <span>JSON ↗</span></button><button id="export-markdown" class="setting-action">导出全部随记 <span>Markdown ↗</span></button><label class="setting-action file-label">导入备份 <span>JSON ↙</span><input id="import-file" type="file" accept=".json,application/json"></label><p id="backup-date" class="muted"></p><p class="muted">备份提示以发起导出为准，请确认文件已保存。清除网站数据、换手机或更换浏览器前，先导出备份。网站内的副本无法应对手机丢失。</p></div><div class="settings-group"><h3>设备存储</h3><p id="storage-status" class="muted">正在检查…</p><button id="persist-button" class="secondary-button">申请持久化存储</button><p class="muted">浏览器决定是否批准；即使批准，主动清除网站数据仍会删除记录。</p></div><div class="settings-group"><h3>手机使用</h3><p class="muted">在华为浏览器菜单中查找“添加到桌面”或类似入口。是否可安装取决于浏览器。首次联网打开并完成离线缓存后，可断网记录。</p><p id="offline-status" class="muted">正在准备离线缓存…</p><button id="install-button" class="secondary-button" hidden>添加到主屏幕</button></div></dialog>
+<dialog id="import-dialog"><div class="dialog-heading"><h2>检查备份</h2><button id="import-close" class="icon-button" aria-label="关闭">×</button></div><p id="import-preview"></p><p class="muted">合并保留所有不同编号的任务；同编号任务和同一天随记按修改时间选较新版本。</p><p class="muted">恢复会完整替换当前任务和随记。执行前会导出当前数据，请确认文件保存后再继续。</p><div class="dialog-actions"><button id="import-merge" class="primary-button">合并记录</button><button id="import-restore" class="secondary-button">恢复为备份内容</button></div></dialog>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<script type="module" src="./app.js"></script>
+</body></html>

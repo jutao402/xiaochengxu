@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {beijingDate,validDate,shiftDate,createBackup,validateBackup,mergeRecords,notesMarkdown} from '../data.js';
+const stamp='2026-10-06T00:00:00.000Z';
+const task={id:'a',date:'2026-10-06',title:'散步',done:false,createdAt:stamp,updatedAt:stamp};
+const note={date:'2026-10-06',body:'今天很好。\n明天继续。',createdAt:stamp,updatedAt:stamp};
+test('北京时间归档及跨月、闰年日期',()=>{assert.equal(beijingDate(new Date('2026-10-05T16:00:00Z')),'2026-10-06');assert.equal(shiftDate('2024-03-01',-1),'2024-02-29');assert.equal(validDate('2026-02-29'),false);assert.equal(validDate('2024-02-29'),true);});
+test('完整备份往返，保留汉字和换行',()=>{const original=createBackup([task],[note]);assert.deepEqual(validateBackup(JSON.parse(JSON.stringify(original))),original);assert.match(notesMarkdown(original.notes),/今天很好。\n明天继续。/);});
+test('拒绝未知版本、重复记录和畸形字段',()=>{for(const raw of [{...createBackup([],[]),version:9},createBackup([task,task],[]),createBackup([],[note,note]),createBackup([{...task,done:'yes'}],[]),createBackup([{...task,date:'2026-02-30'}],[])])assert.throws(()=>validateBackup(raw));});
+test('合并去重，按修改时间处理冲突；重复导入幂等',()=>{const current={tasks:[task],notes:[note]};const newer={...task,title:'读书',updatedAt:'2026-10-07T00:00:00Z'};const incoming={tasks:[newer,{...task,id:'b'}],notes:[{...note,body:'旧备份',updatedAt:'2026-10-05T00:00:00Z'}]};const merged=mergeRecords(current,incoming);assert.equal(merged.tasks.length,2);assert.equal(merged.tasks[0].title,'读书');assert.equal(merged.notes[0].body,note.body);assert.deepEqual(mergeRecords(merged,incoming),merged);});
